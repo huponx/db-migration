@@ -1,0 +1,51 @@
+name: db-migration
+
+services:
+  postgres:
+    platform: linux/arm64
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  flyway:
+    platform: linux/arm64
+    build: .
+    command: migrate
+    environment:
+      FLYWAY_URL: jdbc:postgresql://postgres:5432/app
+      FLYWAY_USER: postgres
+      FLYWAY_PASSWORD: postgres
+      FLYWAY_LOCATIONS: filesystem:/flyway/migrations
+      FLYWAY_CONNECT_RETRIES: 5
+    depends_on:
+      postgres:
+        condition: service_healthy
+  
+  redis:
+    platform: linux/arm64
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
