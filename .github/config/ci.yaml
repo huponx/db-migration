@@ -1,0 +1,33 @@
+apps:
+  - name: db-migration
+    language: sql
+    cicd:
+      jobs:
+        containerize-and-package:
+          image-name: db-migration
+          dockerfile-path: Dockerfile
+          chart-path: charts/db-migration
+          image-tag-paths:
+            - .migration.container.image.tag
+          trivy:
+            severity: "HIGH,CRITICAL"
+            ignore-unfixed: true
+            exit-code: 0   # report only: the CVEs are listed in the PR comment, the build does not fail
+global:
+  deploy:
+    repo: huponx/mm-deploy
+    base-branch: main
+    file: "applications/{env}/{app}.yaml"
+    set:
+      - .spec.source.targetRevision
+  environments:
+    dev:
+      workflows: [main]
+      enabled: false
+      labels: [automerge]
+    staging:
+      workflows: [staging]
+      enabled: false
+    production:
+      workflows: [production]
+      enabled: false
