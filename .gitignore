@@ -1,0 +1,7 @@
+charts/**/*.tgz
+charts/**/*.lock
+
+.DS_Store
+**/.DS_Store
+
+zippass.txt
