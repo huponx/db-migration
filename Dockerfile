@@ -1,4 +1,4 @@
-FROM flyway/flyway:10-alpine
+FROM flyway/flyway:13-alpine
 
 # Copy SQL migration scripts. Flyway 10 deprecates the default "sql" folder;
 # we use /flyway/migrations and set flyway.locations in the chart's ConfigMap.
