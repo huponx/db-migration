@@ -1,0 +1,21 @@
+migration:
+  config:
+    annotations:
+      argocd.argoproj.io/sync-wave: "-6"
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 604800
+  podLabels:
+    role: migration
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/sync-wave: "-5"
+  container:
+    image:
+      repository: huponx/db-migration
+      tag: latest
+    resources:
+      limits:
+        cpu: 200m
+      requests:
+        cpu: 200m
