@@ -51,6 +51,17 @@ docker compose down -v           # reset
 
 Tables use lower snake case and a domain prefix: `identity_*`, `dictionary_*`, `finance_*`, `family_*`, `bill_*`, `wish_*`, or `common_*`. New tables must be plural.
 
+## Deleting a user
+
+**Never run `DELETE FROM identity_users` directly** (in code, a migration or by hand). Every table of a user refers to `identity_users(id)` with `ON DELETE CASCADE`, so the delete of a user with 1,000,000 words cascades over the words, review log, refs and categories in one statement: a long lock, a huge WAL and a transaction that can time out. The cascades stay as a safety net, not as the way to delete.
+
+A user is deleted in two steps:
+
+1. `DELETE /api/users/{id}` (identity `DeleteUser`, soft): sets `identity_users.deleted_at`, disables the user, anonymizes the email and name (the email can be registered again), empties the small tables of identity and revokes the sessions. All reads of users skip `deleted_at IS NOT NULL`.
+2. The cleanup of `dictionary-worker` purges the data in batches, each in a short transaction under the advisory lock of the user (the one of `SaveWord`), deletes the files, sets `purged_at`, and deletes the `identity_users` row `DICTIONARY_PURGE_GRACE` (30 days) later, when the cascade has nothing left to do.
+
+A service that stores data per user must add its own purge step to that loop (`dictionary/internal/store/purge.go`: a batch delete per table, and the table in `dictionaryEmpty`, which guards the final delete). A table without a foreign key to `identity_users` (like `dictionary_review_bonus`) is not reached by the cascade and must be deleted explicitly.
+
 ## Configuration
 
 The chart is configured under the `migration` key of the Application values (`valuesObject`), see `charts/db-migration/values.yaml` and the `migration-job` chart for every option. Flyway reads its settings from environment variables:
