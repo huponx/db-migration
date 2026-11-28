@@ -49,7 +49,7 @@ docker compose down -v           # reset
 
 ## Table naming
 
-Tables use lower snake case and a domain prefix: `identity_*`, `dictionary_*`, `finance_*`, `family_*`, `bill_*`, `wish_*`, or `common_*`. New tables must be plural.
+Tables use lower snake case and a domain prefix: `identity_*`, `courier_*`, `dictionary_*`, `finance_*`, `family_*`, `bill_*`, `wish_*`, or `common_*`. New tables must be plural.
 
 ## Deleting a user
 
